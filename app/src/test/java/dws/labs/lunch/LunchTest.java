@@ -16,17 +16,17 @@ import java.util.concurrent.TimeUnit;
 
 class LunchTest {
     @DisplayName("Programmer's lunch test")
-    @ParameterizedTest(name = "Programmers: {0}, each programmer needs {1} soup, bowl size is {2}")
+    @ParameterizedTest(name = "Programmers: {0}, each programmer needs {1} portions of soup")
     @FieldSource
-    void test(int programmersNum, int needSoup, int bowlSize) throws InterruptedException {
-        var lunch = new Lunch(programmersNum, programmersNum * needSoup, bowlSize, needSoup);
+    void test(int programmersNum, int needSoup) throws InterruptedException {
+        var lunch = new Lunch(programmersNum, programmersNum * needSoup, needSoup);
 
         assertTrue(lunch.run(2, TimeUnit.SECONDS));
     }
 
     static List<Arguments> test = Arrays.asList(
-            Arguments.of(3, 50, 25),
-            Arguments.of(5, 50, 10),
-            Arguments.of(5, 50, 5),
-            Arguments.of(10, 100, 10));
+            Arguments.of(3, 5),
+            Arguments.of(5, 10),
+            Arguments.of(5, 15),
+            Arguments.of(10, 10));
 }

@@ -11,11 +11,9 @@ public class Lunch {
 
     private final Soup soup;
 
-    private final int bowlSize;
-
     private final int programmerSoupNeed;
 
-    public Lunch(int programmersNum, int soupAmount, int bowlSize, int programmerSoupNeed) {
+    public Lunch(int programmersNum, int soupAmount, int programmerSoupNeed) {
         assert programmersNum > 1;
 
         this.soup = new Soup(soupAmount);
@@ -23,8 +21,6 @@ public class Lunch {
         this.spoons = IntStream.range(0, programmersNum)
                 .mapToObj(i -> new Spoon(i))
                 .toList();
-
-        this.bowlSize = bowlSize;
 
         this.programmerSoupNeed = programmerSoupNeed;
     }
@@ -53,13 +49,13 @@ public class Lunch {
         for (int i = 0; i < programmersNum - 1; ++i) {
             var currentProgrammerSpoons = List.of(spoons.get(i), spoons.get(i + 1));
 
-            programmers.add(new Programmer(i, latch, currentProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
+            programmers.add(new Programmer(i, latch, currentProgrammerSpoons, soup, programmerSoupNeed));
         }
 
         var lastProgrammerSpoons = List.of(spoons.getLast(), spoons.getFirst());
 
         programmers.add(
-                new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
+                new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, soup, programmerSoupNeed));
 
         return programmers;
     }

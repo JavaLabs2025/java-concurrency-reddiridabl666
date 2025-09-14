@@ -21,8 +21,7 @@ public class App {
         var lunch = new Lunch(
                 parsedArgs.getProgrammersNum(),
                 parsedArgs.getSoupAmount(),
-                parsedArgs.getBowlSize(),
-                parsedArgs.getProgrammerNeedsSoup());
+                parsedArgs.getProgrammersNeedPortions());
 
         lunch.run(parsedArgs.getTimeout(), TimeUnit.MILLISECONDS);
     }

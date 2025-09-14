@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Programmer implements Runnable {
-    private static final Duration waitTime = Duration.ofMillis(100);
+    private static final Duration waitTime = Duration.ofMillis(10);
 
     private final CountDownLatch latch;
 
@@ -21,23 +21,20 @@ public class Programmer implements Runnable {
 
     private final int id;
 
-    private int needSoup;
+    private int needSoupPortions;
 
-    private int bowlSize;
-
-    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, Soup soup, int needSoup, int bowlSize) {
+    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, Soup soup, int needSoup) {
         this.spoons = spoons;
         this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
         this.soup = soup;
-        this.needSoup = needSoup;
-        this.bowlSize = bowlSize;
+        this.needSoupPortions = needSoup;
         this.id = id;
         this.latch = latch;
     }
 
     @Override
     public void run() {
-        while (needSoup > 0) {
+        while (needSoupPortions > 0) {
             try {
                 boolean got = getSpoons();
                 if (got) {
@@ -81,17 +78,13 @@ public class Programmer implements Runnable {
         }
     }
 
-    private void eatSoup() throws InterruptedException {
-        while (true) {
-            log.info("[PROGRAMMER {}] Trying to get soup", id);
+    private void eatSoup() {
+        log.info("[PROGRAMMER {}] Trying to get soup", id);
 
-            if (soup.get(bowlSize)) {
-                needSoup -= bowlSize;
-                log.info("[PROGRAMMER {}] Ate {} soup, {} left", id, bowlSize, needSoup);
-                break;
-            }
+        soup.getPortion();
 
-            Thread.sleep(waitTime);
-        }
+        needSoupPortions -= 1;
+
+        log.info("[PROGRAMMER {}] Ate 1 portion of soup, {} left", id, needSoupPortions);
     }
 }

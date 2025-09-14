@@ -3,18 +3,17 @@ package dws.labs.lunch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Soup {
-    private final AtomicInteger amountLeft;
+    private final AtomicInteger portionsLeft;
 
     public Soup(int amount) {
-        this.amountLeft = new AtomicInteger(amount);
+        this.portionsLeft = new AtomicInteger(amount);
     }
 
-    boolean get(int amount) {
-        int current = amountLeft.get();
-        return amountLeft.compareAndSet(current, current - amount);
+    void getPortion() {
+        portionsLeft.decrementAndGet();
     }
 
-    int current() {
-        return amountLeft.get();
+    int getPortionsLeft() {
+        return portionsLeft.get();
     }
 }
