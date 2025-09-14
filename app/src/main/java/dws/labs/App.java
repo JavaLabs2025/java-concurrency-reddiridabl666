@@ -3,12 +3,25 @@
  */
 package dws.labs;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import com.beust.jcommander.JCommander;
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+import dws.labs.lunch.Lunch;
+
+public class App {
+    public static void main(String... args) throws InterruptedException {
+        var parsedArgs = new CommandLineArgs();
+
+        JCommander.newBuilder()
+                .addObject(parsedArgs)
+                .build()
+                .parse(args);
+
+        var lunch = new Lunch(
+                parsedArgs.getProgrammersNum(),
+                parsedArgs.getSoupAmount(),
+                parsedArgs.getBowlSize(),
+                parsedArgs.getProgrammerNeedsSoup());
+
+        lunch.run();
     }
 }
