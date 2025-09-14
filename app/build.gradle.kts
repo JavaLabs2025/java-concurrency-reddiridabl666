@@ -44,4 +44,12 @@ application {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    
+    testLogging {
+        events("started", "passed", "skipped", "failed")
+        if (project.hasProperty("verbose")) {
+            showStandardStreams = true
+        }
+        setExceptionFormat("full")
+    }
 }

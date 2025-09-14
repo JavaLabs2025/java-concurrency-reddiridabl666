@@ -13,4 +13,8 @@ public class Soup {
         int current = amountLeft.get();
         return amountLeft.compareAndSet(current, current - amount);
     }
+
+    int current() {
+        return amountLeft.get();
+    }
 }

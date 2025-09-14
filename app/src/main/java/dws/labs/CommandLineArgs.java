@@ -13,8 +13,11 @@ public class CommandLineArgs {
     private int programmerNeedsSoup = 50;
 
     @Parameter(names = "--soup", description = "Soup total amount")
-    private int soupAmount = 150;
+    private int soupAmount = programmersNum * programmerNeedsSoup;
 
     @Parameter(names = "--bowl", description = "Bowl size")
     private int bowlSize = 25;
+
+    @Parameter(names = "--timeout", description = "Timeout milliseconds")
+    private int timeout = 100;
 }

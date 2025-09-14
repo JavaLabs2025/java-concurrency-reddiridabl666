@@ -3,6 +3,8 @@
  */
 package dws.labs;
 
+import java.util.concurrent.TimeUnit;
+
 import com.beust.jcommander.JCommander;
 
 import dws.labs.lunch.Lunch;
@@ -22,6 +24,6 @@ public class App {
                 parsedArgs.getBowlSize(),
                 parsedArgs.getProgrammerNeedsSoup());
 
-        lunch.run();
+        lunch.run(parsedArgs.getTimeout(), TimeUnit.MILLISECONDS);
     }
 }

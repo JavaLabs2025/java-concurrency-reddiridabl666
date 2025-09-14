@@ -2,14 +2,18 @@ package dws.labs.lunch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class Lunch {
-    private final List<Programmer> programmers;
-
     private final List<Spoon> spoons;
 
     private final Soup soup;
+
+    private final int bowlSize;
+
+    private final int programmerSoupNeed;
 
     public Lunch(int programmersNum, int soupAmount, int bowlSize, int programmerSoupNeed) {
         assert programmersNum > 1;
@@ -20,22 +24,17 @@ public class Lunch {
                 .mapToObj(i -> new Spoon(i))
                 .toList();
 
-        this.programmers = new ArrayList<>(programmersNum);
+        this.bowlSize = bowlSize;
 
-        for (int i = 0; i < programmersNum - 1; ++i) {
-            var currentProgrammerSpoons = List.of(spoons.get(i), spoons.get(i + 1));
-
-            this.programmers.add(new Programmer(i, currentProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
-        }
-
-        var lastProgrammerSpoons = List.of(spoons.getLast(), spoons.getFirst());
-
-        this.programmers
-                .add(new Programmer(programmersNum - 1, lastProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
+        this.programmerSoupNeed = programmerSoupNeed;
     }
 
-    public void run() throws InterruptedException {
+    public boolean run(long timeout, TimeUnit unit) throws InterruptedException {
         List<Thread> threads = new ArrayList<>();
+
+        CountDownLatch latch = new CountDownLatch(spoons.size());
+
+        var programmers = createProgrammers(latch);
 
         for (var programmer : programmers) {
             var thread = new Thread(programmer);
@@ -43,8 +42,25 @@ public class Lunch {
             thread.start();
         }
 
-        for (var thread : threads) {
-            thread.join();
+        return latch.await(timeout, unit);
+    }
+
+    private List<Programmer> createProgrammers(CountDownLatch latch) {
+        var programmersNum = spoons.size();
+
+        var programmers = new ArrayList<Programmer>();
+
+        for (int i = 0; i < programmersNum - 1; ++i) {
+            var currentProgrammerSpoons = List.of(spoons.get(i), spoons.get(i + 1));
+
+            programmers.add(new Programmer(i, latch, currentProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
         }
+
+        var lastProgrammerSpoons = List.of(spoons.getLast(), spoons.getFirst());
+
+        programmers.add(
+                new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, soup, programmerSoupNeed, bowlSize));
+
+        return programmers;
     }
 }

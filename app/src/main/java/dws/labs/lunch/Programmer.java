@@ -4,12 +4,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Programmer implements Runnable {
     private static final Duration waitTime = Duration.ofMillis(100);
+
+    private final CountDownLatch latch;
 
     private final List<Spoon> spoons;
     private final List<Boolean> spoonsTaken;
@@ -22,13 +25,14 @@ public class Programmer implements Runnable {
 
     private int bowlSize;
 
-    public Programmer(int id, List<Spoon> spoons, Soup soup, int needSoup, int bowlSize) {
+    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, Soup soup, int needSoup, int bowlSize) {
         this.spoons = spoons;
         this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
         this.soup = soup;
         this.needSoup = needSoup;
         this.bowlSize = bowlSize;
         this.id = id;
+        this.latch = latch;
     }
 
     @Override
@@ -47,6 +51,8 @@ public class Programmer implements Runnable {
                 Thread.currentThread().interrupt();
             }
         }
+
+        latch.countDown();
     }
 
     private boolean getSpoons() throws InterruptedException {
