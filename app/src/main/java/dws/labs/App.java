@@ -20,8 +20,8 @@ public class App {
 
         var lunch = new Lunch(
                 parsedArgs.getProgrammersNum(),
-                parsedArgs.getSoupAmount(),
-                parsedArgs.getProgrammersNeedPortions());
+                parsedArgs.getWaitersNum(),
+                parsedArgs.getSoupAmount());
 
         lunch.run(parsedArgs.getTimeout(), TimeUnit.MILLISECONDS);
     }

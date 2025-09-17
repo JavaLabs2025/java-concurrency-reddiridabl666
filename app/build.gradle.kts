@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -40,6 +40,10 @@ application {
     // Define the main class for the application.
     mainClass = "dws.labs.App"
 }
+
+// tasks.jar {
+//     manifest.attributes["Main-Class"] = "dws.labs.App"
+// }
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.

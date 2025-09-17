@@ -9,8 +9,13 @@ public class Soup {
         this.portionsLeft = new AtomicInteger(amount);
     }
 
-    void getPortion() {
-        portionsLeft.decrementAndGet();
+    boolean getPortion() {
+        int current = portionsLeft.get();
+        if (current <= 0) {
+            return false;
+        }
+
+        return portionsLeft.compareAndSet(current, current - 1);
     }
 
     int getPortionsLeft() {

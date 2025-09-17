@@ -1,51 +1,57 @@
 package dws.labs.lunch;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Programmer implements Runnable {
-    private static final Duration waitTime = Duration.ofMillis(10);
+    private static final Duration waitTime = Duration.of(10, ChronoUnit.MICROS);
 
     private final CountDownLatch latch;
 
     private final List<Spoon> spoons;
     private final List<Boolean> spoonsTaken;
 
-    private final Soup soup;
+    private final List<Waiter> waiters;
 
+    @Getter
+    private int ateSoupPortions = 0;
+
+    @Getter
     private final int id;
 
-    private int needSoupPortions;
-
-    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, Soup soup, int needSoup) {
+    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, List<Waiter> waiters) {
         this.spoons = spoons;
         this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
-        this.soup = soup;
-        this.needSoupPortions = needSoup;
+        this.waiters = waiters;
         this.id = id;
         this.latch = latch;
     }
 
     @Override
     public void run() {
-        while (needSoupPortions > 0) {
+        while (true) {
             try {
                 boolean got = getSpoons();
                 if (got) {
-                    eatSoup();
+                    boolean soupLeft = getAndEatSoup();
+                    if (!soupLeft) {
+                        break;
+                    }
                 }
-
-                leaveSpoons();
 
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } finally {
+                leaveSpoons();
             }
         }
 
@@ -78,13 +84,27 @@ public class Programmer implements Runnable {
         }
     }
 
-    private void eatSoup() {
+    private boolean getAndEatSoup() throws InterruptedException {
         log.info("[PROGRAMMER {}] Trying to get soup", id);
 
-        soup.getPortion();
+        // Select waiter with min queue size
+        var waiter = waiters.stream().min((first, second) -> first.getQueueSize() - second.getQueueSize());
 
-        needSoupPortions -= 1;
+        waiter.get().addToQueue(this);
 
-        log.info("[PROGRAMMER {}] Ate 1 portion of soup, {} left", id, needSoupPortions);
+        while (true) {
+            var result = waiter.get().givePortion(this);
+            switch (result) {
+                case NoPortionsLeft:
+                    log.info("[PROGRAMMER {}] No soup left, ate total: {}", id, ateSoupPortions);
+                    return false;
+                case Ok:
+                    ++ateSoupPortions;
+                    log.info("[PROGRAMMER {}] Ate 1 portion of soup, ate total: {}", id, ateSoupPortions);
+                    return true;
+                case Wait:
+                    Thread.sleep(waitTime);
+            }
+        }
     }
 }

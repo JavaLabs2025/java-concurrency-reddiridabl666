@@ -1,6 +1,5 @@
 package dws.labs.lunch;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,7 +17,7 @@ public class Spoon {
     }
 
     boolean take() throws InterruptedException {
-        return lock.tryLock(10, TimeUnit.MICROSECONDS);
+        return lock.tryLock();
     }
 
     void leave() {
