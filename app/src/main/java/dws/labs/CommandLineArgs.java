@@ -15,6 +15,6 @@ public class CommandLineArgs {
     @Parameter(names = "--waiters", description = "Waiters number")
     private int waitersNum = 2;
 
-    @Parameter(names = "--timeout", description = "Timeout milliseconds")
-    private int timeout = 5000;
+    @Parameter(names = "--timeout", description = "Timeout seconds")
+    private int timeout = 180;
 }

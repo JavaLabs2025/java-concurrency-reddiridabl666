@@ -23,6 +23,6 @@ public class App {
                 parsedArgs.getWaitersNum(),
                 parsedArgs.getSoupAmount());
 
-        lunch.run(parsedArgs.getTimeout(), TimeUnit.MILLISECONDS);
+        lunch.run(parsedArgs.getTimeout(), TimeUnit.SECONDS);
     }
 }

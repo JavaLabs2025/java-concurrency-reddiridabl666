@@ -18,10 +18,13 @@ public class Lunch {
 
     private final int programmersNum;
 
+    private final int totalPortions;
+
     public Lunch(int programmersNum, int waitersNum, int soupAmount) {
         assert programmersNum > 1;
 
         this.programmersNum = programmersNum;
+        this.totalPortions = soupAmount;
 
         this.soup = new Soup(soupAmount);
 
@@ -55,6 +58,17 @@ public class Lunch {
 
         log.info("Programmers ate: {}", programmers.stream()
                 .map(programmer -> programmer.getAteSoupPortions())
+                .toList());
+
+        double median = (double) totalPortions / programmersNum;
+
+        log.info("Median: {}", median);
+
+        log.info("Programmers error % from expected median: {}", programmers.stream()
+                .map(programmer -> Math.abs(median - programmer.getAteSoupPortions())
+                        / (double) programmer.getAteSoupPortions() * 100)
+                .map(error -> Math.round(error))
+                .map(error -> error + "%")
                 .toList());
 
         if (soup.getPortionsLeft() != 0) {
