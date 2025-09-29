@@ -36,5 +36,6 @@ class LunchTest {
             Arguments.of(5, 2, 25),
             Arguments.of(10, 2, 1000),
             Arguments.of(100, 2, 1000),
+            Arguments.of(7, 2, 100_000),
             Arguments.of(7, 2, 1_000_000));
 }

@@ -60,12 +60,12 @@ public class Lunch {
                 .map(programmer -> programmer.getAteSoupPortions())
                 .toList());
 
-        double median = (double) totalPortions / programmersNum;
+        double mean = (double) totalPortions / programmersNum;
 
-        log.info("Median: {}", median);
+        log.info("Mean: {}", mean);
 
-        log.info("Programmers error % from expected median: {}", programmers.stream()
-                .map(programmer -> Math.abs(median - programmer.getAteSoupPortions())
+        log.info("Programmers error % from expected mean: {}", programmers.stream()
+                .map(programmer -> Math.abs(mean - programmer.getAteSoupPortions())
                         / (double) programmer.getAteSoupPortions() * 100)
                 .map(error -> Math.round(error))
                 .map(error -> error + "%")
