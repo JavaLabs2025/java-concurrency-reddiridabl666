@@ -41,9 +41,6 @@ application {
     mainClass = "dws.labs.App"
 }
 
-// tasks.jar {
-//     manifest.attributes["Main-Class"] = "dws.labs.App"
-// }
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
