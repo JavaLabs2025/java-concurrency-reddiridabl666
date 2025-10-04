@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,9 @@ public class Programmer implements Runnable {
     private final List<Spoon> spoons;
     private final List<Boolean> spoonsTaken;
 
-    private final List<Waiter> waiters;
+    private final AtomicBoolean readyToEat = new AtomicBoolean(false);
+    private final AtomicBoolean hasFood = new AtomicBoolean(false);
+    private final AtomicBoolean soupGone = new AtomicBoolean(false);
 
     private int soupLeftInBowl = 0;
 
@@ -33,17 +36,33 @@ public class Programmer implements Runnable {
     @Getter
     private final int id;
 
-    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons, List<Waiter> waiters) {
+    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons) {
         this.spoons = spoons;
         this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
-        this.waiters = waiters;
         this.id = id;
         this.latch = latch;
     }
 
+    boolean isReadyToEat() {
+        return readyToEat.get();
+    }
+
+    void sayThatSoupIsGone() {
+        soupGone.set(true);
+    }
+
+    boolean prepareForFood() {
+        return readyToEat.compareAndSet(true, false);
+    }
+
+    void addFood() {
+        soupLeftInBowl = BOWL_SIZE;
+        hasFood.set(true);
+    }
+
     @Override
     public void run() {
-        while (true) {
+        while (soupGone.compareAndSet(false, false)) {
             try {
                 boolean got = getSpoons();
                 if (got) {
@@ -102,30 +121,23 @@ public class Programmer implements Runnable {
         }
 
         ++ateSoupPortions;
+        hasFood.set(false);
+
         log.info("[PROGRAMMER {}] Ate 1 portion of soup, ate total: {}", id, ateSoupPortions);
     }
 
     private boolean getAndEatSoup() throws InterruptedException {
+        readyToEat.set(true);
+
         log.info("[PROGRAMMER {}] Trying to get soup", id);
 
-        // Select waiter with min queue size
-        var waiter = waiters.stream().min((first, second) -> first.getQueueSize() - second.getQueueSize());
-
-        waiter.get().addToQueue(this);
-
-        while (true) {
-            var result = waiter.get().givePortion(this);
-            switch (result) {
-            case NoPortionsLeft:
-                log.info("[PROGRAMMER {}] No soup left, ate total: {}", id, ateSoupPortions);
+        while (!hasFood.compareAndSet(true, false)) {
+            if (soupGone.compareAndSet(true, true)) {
                 return false;
-            case Ok:
-                soupLeftInBowl = BOWL_SIZE;
-                eatSoup();
-                return true;
-            case Wait:
-                Thread.sleep(waitTime);
             }
         }
+
+        eatSoup();
+        return true;
     }
 }

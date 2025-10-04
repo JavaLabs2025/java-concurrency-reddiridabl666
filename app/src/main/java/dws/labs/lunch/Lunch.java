@@ -14,11 +14,11 @@ public class Lunch {
 
     private final List<Spoon> spoons;
 
-    private final List<Waiter> waiters;
-
     private final Soup soup;
 
     private final int programmersNum;
+
+    private final int waitersNum;
 
     private final int totalPortions;
 
@@ -26,22 +26,31 @@ public class Lunch {
         assert programmersNum > 1;
 
         this.programmersNum = programmersNum;
+        this.waitersNum = waitersNum;
         this.totalPortions = soupAmount;
 
         this.soup = new Soup(soupAmount);
 
         this.spoons = IntStream.range(0, programmersNum).mapToObj(Spoon::new).toList();
 
-        this.waiters = IntStream.range(0, waitersNum).mapToObj(i -> new Waiter(i, soup, programmersNum)).toList();
     }
 
     public Metrics run(long timeout, TimeUnit unit) throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(programmersNum);
+        CountDownLatch latch = new CountDownLatch(programmersNum + waitersNum);
 
         var programmers = createProgrammers(latch);
 
+        var waiters = IntStream.range(0, waitersNum)
+                .mapToObj(i -> new Waiter(i, latch, soup, programmers))
+                .toList();
+
         for (var programmer : programmers) {
             var thread = new Thread(programmer);
+            thread.start();
+        }
+
+        for (var waiter : waiters) {
+            var thread = new Thread(waiter);
             thread.start();
         }
 
@@ -51,8 +60,7 @@ public class Lunch {
 
         log.info("Soup left: {}", soup.getPortionsLeft());
 
-        log.info("Programmers ate: {}",
-                programmers.stream().map(programmer -> programmer.getAteSoupPortions()).toList());
+        log.info("Programmers ate: {}", programmers.stream().map(programmer -> programmer.getAteSoupPortions()).toList());
 
         double mean = (double) totalPortions / programmersNum;
 
@@ -75,12 +83,12 @@ public class Lunch {
         for (int i = 0; i < programmersNum - 1; ++i) {
             var currentProgrammerSpoons = List.of(spoons.get(i), spoons.get(i + 1));
 
-            programmers.add(new Programmer(i, latch, currentProgrammerSpoons, waiters));
+            programmers.add(new Programmer(i, latch, currentProgrammerSpoons));
         }
 
         var lastProgrammerSpoons = List.of(spoons.getFirst(), spoons.getLast());
 
-        programmers.add(new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, waiters));
+        programmers.add(new Programmer(programmersNum - 1, latch, lastProgrammerSpoons));
 
         return programmers;
     }
