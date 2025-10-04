@@ -68,10 +68,7 @@ public class Programmer implements Runnable {
         for (int i = 0; i < spoons.size(); ++i) {
             log.info("[PROGRAMMER {}] Trying to get spoon {}", id, spoons.get(i).getId());
 
-            boolean got = spoons.get(i).take();
-            if (!got) {
-                return false;
-            }
+            spoons.get(i).take();
 
             log.info("[PROGRAMMER {}] Got spoon {}", id, spoons.get(i).getId());
             spoonsTaken.set(i, true);
@@ -119,15 +116,15 @@ public class Programmer implements Runnable {
         while (true) {
             var result = waiter.get().givePortion(this);
             switch (result) {
-                case NoPortionsLeft:
-                    log.info("[PROGRAMMER {}] No soup left, ate total: {}", id, ateSoupPortions);
-                    return false;
-                case Ok:
-                    soupLeftInBowl = BOWL_SIZE;
-                    eatSoup();
-                    return true;
-                case Wait:
-                    Thread.sleep(waitTime);
+            case NoPortionsLeft:
+                log.info("[PROGRAMMER {}] No soup left, ate total: {}", id, ateSoupPortions);
+                return false;
+            case Ok:
+                soupLeftInBowl = BOWL_SIZE;
+                eatSoup();
+                return true;
+            case Wait:
+                Thread.sleep(waitTime);
             }
         }
     }

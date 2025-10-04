@@ -12,12 +12,13 @@ public class Spoon {
     private final int id;
 
     public Spoon(int id) {
-        this.lock = new ReentrantLock();
+        this.lock = new ReentrantLock(true);
         this.id = id;
     }
 
     boolean take() {
-        return lock.tryLock();
+        lock.lock();
+        return true;
     }
 
     void leave() {
