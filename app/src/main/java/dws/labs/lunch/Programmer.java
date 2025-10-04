@@ -14,12 +14,18 @@ import lombok.extern.slf4j.Slf4j;
 public class Programmer implements Runnable {
     private static final Duration waitTime = Duration.of(10, ChronoUnit.MICROS);
 
+    private static final int BOWL_SIZE = 100;
+
+    private static final int MAX_BITE_SIZE = 50;
+
     private final CountDownLatch latch;
 
     private final List<Spoon> spoons;
     private final List<Boolean> spoonsTaken;
 
     private final List<Waiter> waiters;
+
+    private int soupLeftInBowl = 0;
 
     @Getter
     private int ateSoupPortions = 0;
@@ -84,6 +90,24 @@ public class Programmer implements Runnable {
         }
     }
 
+    private void eatSoup() throws InterruptedException {
+        while (soupLeftInBowl > 0) {
+            int amount = (int) (Math.random() * MAX_BITE_SIZE) + 1;
+            if (amount > soupLeftInBowl) {
+                amount = soupLeftInBowl;
+            }
+
+            soupLeftInBowl -= amount;
+
+            log.info("[PROGRAMMER {}] Ate {}% of soup in his bowl, left in bowl: {}%", id, amount, soupLeftInBowl);
+
+            Thread.sleep(waitTime);
+        }
+
+        ++ateSoupPortions;
+        log.info("[PROGRAMMER {}] Ate 1 portion of soup, ate total: {}", id, ateSoupPortions);
+    }
+
     private boolean getAndEatSoup() throws InterruptedException {
         log.info("[PROGRAMMER {}] Trying to get soup", id);
 
@@ -99,8 +123,8 @@ public class Programmer implements Runnable {
                     log.info("[PROGRAMMER {}] No soup left, ate total: {}", id, ateSoupPortions);
                     return false;
                 case Ok:
-                    ++ateSoupPortions;
-                    log.info("[PROGRAMMER {}] Ate 1 portion of soup, ate total: {}", id, ateSoupPortions);
+                    soupLeftInBowl = BOWL_SIZE;
+                    eatSoup();
                     return true;
                 case Wait:
                     Thread.sleep(waitTime);

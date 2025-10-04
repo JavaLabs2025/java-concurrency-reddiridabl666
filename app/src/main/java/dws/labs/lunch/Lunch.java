@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Lunch {
+    public record Metrics(boolean timeoutExceeded, int soupLeft, List<Integer> errors) {}
+
     private final List<Spoon> spoons;
 
     private final List<Waiter> waiters;
@@ -28,53 +30,43 @@ public class Lunch {
 
         this.soup = new Soup(soupAmount);
 
-        this.spoons = IntStream.range(0, programmersNum)
-                .mapToObj(i -> new Spoon(i))
-                .toList();
+        this.spoons = IntStream.range(0, programmersNum).mapToObj(Spoon::new).toList();
 
-        this.waiters = IntStream.range(0, waitersNum)
-                .mapToObj(i -> new Waiter(i, soup, programmersNum))
-                .toList();
+        this.waiters = IntStream.range(0, waitersNum).mapToObj(i -> new Waiter(i, soup, programmersNum)).toList();
     }
 
-    public boolean run(long timeout, TimeUnit unit) throws InterruptedException {
-        List<Thread> threads = new ArrayList<>(programmersNum);
-
+    public Metrics run(long timeout, TimeUnit unit) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(programmersNum);
 
         var programmers = createProgrammers(latch);
 
         for (var programmer : programmers) {
             var thread = new Thread(programmer);
-            threads.add(thread);
             thread.start();
         }
 
         log.info("Started {} programmer threads", programmers.size());
 
-        var result = latch.await(timeout, unit);
+        var latchResult = latch.await(timeout, unit);
 
         log.info("Soup left: {}", soup.getPortionsLeft());
 
-        log.info("Programmers ate: {}", programmers.stream()
-                .map(programmer -> programmer.getAteSoupPortions())
-                .toList());
+        log.info("Programmers ate: {}",
+                programmers.stream().map(programmer -> programmer.getAteSoupPortions()).toList());
 
         double mean = (double) totalPortions / programmersNum;
 
         log.info("Mean: {}", mean);
 
-        log.info("Programmers error % from expected mean: {}", programmers.stream()
+        var errors = programmers.stream()
                 .map(programmer -> Math.abs(mean - programmer.getAteSoupPortions())
                         / (double) programmer.getAteSoupPortions() * 100)
-                .map(error -> Math.round(error))
-                .map(error -> error + "%")
-                .toList());
+                .map(error -> (int) Math.round(error))
+                .toList();
 
-        if (soup.getPortionsLeft() != 0) {
-            throw new RuntimeException(String.format("soup left: %d, expected 0", soup.getPortionsLeft()));
-        }
-        return result;
+        log.info("Programmers error % from expected mean: {}", errors.stream().map(error -> error + "%").toList());
+
+        return new Metrics(latchResult, soup.getPortionsLeft(), errors);
     }
 
     private List<Programmer> createProgrammers(CountDownLatch latch) {
@@ -88,8 +80,7 @@ public class Lunch {
 
         var lastProgrammerSpoons = List.of(spoons.getFirst(), spoons.getLast());
 
-        programmers.add(
-                new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, waiters));
+        programmers.add(new Programmer(programmersNum - 1, latch, lastProgrammerSpoons, waiters));
 
         return programmers;
     }

@@ -16,7 +16,7 @@ public class Spoon {
         this.id = id;
     }
 
-    boolean take() throws InterruptedException {
+    boolean take() {
         return lock.tryLock();
     }
 

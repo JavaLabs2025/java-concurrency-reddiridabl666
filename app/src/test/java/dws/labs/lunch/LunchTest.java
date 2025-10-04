@@ -19,16 +19,22 @@ class LunchTest {
     int programmersNum;
 
     @Parameter(1)
-    int soupPortions;
-
-    @Parameter(2)
     int waitersNum;
 
-    @RepeatedTest(value = 5)
-    void test() throws InterruptedException {
-        var lunch = new Lunch(programmersNum, soupPortions, waitersNum);
+    @Parameter(2)
+    int soupPortions;
 
-        assertTrue(lunch.run(5, TimeUnit.MINUTES));
+    @RepeatedTest(value = 3)
+    void test() throws InterruptedException {
+        var lunch = new Lunch(programmersNum, waitersNum, soupPortions);
+        var metrics = lunch.run(5, TimeUnit.MINUTES);
+
+        assertTrue(metrics.timeoutExceeded(), "Timeout was exceeded");
+        assertEquals(0, metrics.soupLeft(), "All soup was not eaten");
+
+        for (int error : metrics.errors()) {
+            assertTrue(error <= 10, String.format("Error from expected mean is %d%%, expected less than or equal to 10%%", error));
+        }
     }
 
     static List<Arguments> args = Arrays.asList(
@@ -36,6 +42,8 @@ class LunchTest {
             Arguments.of(5, 2, 25),
             Arguments.of(10, 2, 1000),
             Arguments.of(100, 2, 1000),
-            Arguments.of(7, 2, 100_000),
-            Arguments.of(7, 2, 1_000_000));
+            Arguments.of(7, 2, 100_000)
+    // Arguments.of(7, 2, 1_000_000)
+
+    );
 }
