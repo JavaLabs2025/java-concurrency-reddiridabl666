@@ -40,6 +40,8 @@ public class Waiter implements Runnable {
                 while (true) {
                     if (soup.getPortion()) {
                         programmer.addFood();
+                        bell.ring(programmer); // Add programmer back to the queue - so that all programmers get equal amount
+                                               // of food
                         break;
                     }
 

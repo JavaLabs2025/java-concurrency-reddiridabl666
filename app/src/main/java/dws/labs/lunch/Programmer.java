@@ -29,6 +29,7 @@ public class Programmer implements Runnable {
 
     private final AtomicBoolean hasFood = new AtomicBoolean(false);
     private final AtomicBoolean soupGone = new AtomicBoolean(false);
+    private final AtomicBoolean readyForFood = new AtomicBoolean(false);
 
     private int soupLeftInBowl = 0;
 
@@ -55,8 +56,14 @@ public class Programmer implements Runnable {
         hasFood.set(true);
     }
 
+    public boolean isReadyForFood() {
+        return readyForFood.get();
+    }
+
     @Override
     public void run() {
+        bell.ring(this);
+
         while (soupGone.compareAndSet(false, false)) {
             try {
                 boolean soupLeft = getSoup();
@@ -127,16 +134,17 @@ public class Programmer implements Runnable {
     }
 
     private boolean getSoup() {
+        readyForFood.set(true);
+
         log.info("[PROGRAMMER {}] Trying to get soup", id);
 
-        bell.ring(this);
-
         while (!hasFood.compareAndSet(true, true)) {
-            if (soupGone.compareAndSet(true, true)) {
+            if (soupGone.compareAndSet(true, true) && !hasFood.compareAndSet(true, true)) {
                 return false;
             }
         }
 
+        readyForFood.set(false);
         return true;
     }
 }

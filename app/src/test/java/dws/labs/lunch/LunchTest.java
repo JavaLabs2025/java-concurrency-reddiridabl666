@@ -33,17 +33,13 @@ class LunchTest {
         assertEquals(0, metrics.soupLeft(), "All soup was not eaten");
 
         for (int error : metrics.errors()) {
-            assertTrue(error <= 30, String.format("Error from expected mean is %d%%, expected less than or equal to 30%%", error));
+            assertTrue(error <= 10, String.format("Error from expected mean is %d%%, expected less than or equal to 10%%", error));
         }
     }
 
     static List<Arguments> args = Arrays.asList(
-            Arguments.of(3, 2, 15),
-            Arguments.of(5, 2, 25),
-            Arguments.of(10, 2, 1000),
-            Arguments.of(100, 2, 1000),
-            Arguments.of(7, 2, 100_000)
-    // Arguments.of(7, 2, 1_000_000)
-
-    );
+            Arguments.of(7, 2, 100),
+            Arguments.of(7, 2, 1000),
+            Arguments.of(7, 2, 10_000),
+            Arguments.of(7, 2, 100_000));
 }
