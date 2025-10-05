@@ -2,6 +2,8 @@ package dws.labs.lunch;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,8 +23,10 @@ public class Programmer implements Runnable {
     private final CountDownLatch latch;
 
     private final List<Spoon> spoons;
+    private final List<Boolean> spoonsTaken;
 
-    private final AtomicBoolean readyToEat = new AtomicBoolean(false);
+    private final WaiterBell bell;
+
     private final AtomicBoolean hasFood = new AtomicBoolean(false);
     private final AtomicBoolean soupGone = new AtomicBoolean(false);
 
@@ -34,25 +38,19 @@ public class Programmer implements Runnable {
     @Getter
     private final int id;
 
-    public Programmer(int id, CountDownLatch latch, List<Spoon> spoons) {
+    public Programmer(int id, CountDownLatch latch, WaiterBell bell, List<Spoon> spoons) {
         this.spoons = spoons;
+        this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
         this.id = id;
         this.latch = latch;
+        this.bell = bell;
     }
 
-    boolean isReadyToEat() {
-        return readyToEat.get();
-    }
-
-    void sayThatSoupIsGone() {
+    public void sayThatFoodIsGone() {
         soupGone.set(true);
     }
 
-    boolean prepareForFood() {
-        return readyToEat.compareAndSet(true, false);
-    }
-
-    void addFood() {
+    public void addFood() {
         soupLeftInBowl = BOWL_SIZE;
         hasFood.set(true);
     }
@@ -61,11 +59,14 @@ public class Programmer implements Runnable {
     public void run() {
         while (soupGone.compareAndSet(false, false)) {
             try {
-                getSpoons();
-                boolean soupLeft = getAndEatSoup();
+                boolean soupLeft = getSoup();
                 if (!soupLeft) {
                     break;
                 }
+
+                getSpoons();
+
+                eatSoup();
 
                 Thread.sleep(Duration.of(100 + (long) (Math.random() * waitAfterAtePortionTimeMicros), ChronoUnit.MICROS));
             } catch (InterruptedException e) {
@@ -75,6 +76,9 @@ public class Programmer implements Runnable {
             }
         }
 
+        log.info("[PROGRAMMER {}] No soup left {}", id);
+        bell.programmerFinised(id);
+
         latch.countDown();
     }
 
@@ -83,6 +87,7 @@ public class Programmer implements Runnable {
             log.info("[PROGRAMMER {}] Trying to get spoon {}", id, spoons.get(i).getId());
 
             spoons.get(i).take();
+            spoonsTaken.set(i, true);
 
             log.info("[PROGRAMMER {}] Got spoon {}", id, spoons.get(i).getId());
         }
@@ -90,7 +95,12 @@ public class Programmer implements Runnable {
 
     private void leaveSpoons() {
         for (int i = 0; i < spoons.size(); ++i) {
+            if (!spoonsTaken.get(i)) {
+                continue;
+            }
+
             spoons.get(i).leave();
+            spoonsTaken.set(i, false);
 
             log.info("[PROGRAMMER {}] Left spoon {}", id, spoons.get(i).getId());
         }
@@ -116,18 +126,17 @@ public class Programmer implements Runnable {
         log.info("[PROGRAMMER {}] Ate 1 portion of soup, ate total: {}", id, ateSoupPortions);
     }
 
-    private boolean getAndEatSoup() throws InterruptedException {
-        readyToEat.set(true);
-
+    private boolean getSoup() {
         log.info("[PROGRAMMER {}] Trying to get soup", id);
 
-        while (!hasFood.compareAndSet(true, false)) {
+        bell.ring(this);
+
+        while (!hasFood.compareAndSet(true, true)) {
             if (soupGone.compareAndSet(true, true)) {
                 return false;
             }
         }
 
-        eatSoup();
         return true;
     }
 }

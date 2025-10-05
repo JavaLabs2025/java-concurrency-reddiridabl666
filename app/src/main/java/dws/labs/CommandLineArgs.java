@@ -10,7 +10,7 @@ public class CommandLineArgs {
     private int programmersNum = 7;
 
     @Parameter(names = "--soup", description = "Soup total amount")
-    private int soupAmount = 10000;
+    private int soupAmount = 1000;
 
     @Parameter(names = "--waiters", description = "Waiters number")
     private int waitersNum = 2;

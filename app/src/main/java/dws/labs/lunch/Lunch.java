@@ -16,6 +16,8 @@ public class Lunch {
 
     private final Soup soup;
 
+    private final WaiterBell bell;
+
     private final int programmersNum;
 
     private final int waitersNum;
@@ -31,8 +33,9 @@ public class Lunch {
 
         this.soup = new Soup(soupAmount);
 
-        this.spoons = IntStream.range(0, programmersNum).mapToObj(Spoon::new).toList();
+        this.bell = new WaiterBell(programmersNum);
 
+        this.spoons = IntStream.range(0, programmersNum).mapToObj(Spoon::new).toList();
     }
 
     public Metrics run(long timeout, TimeUnit unit) throws InterruptedException {
@@ -41,7 +44,7 @@ public class Lunch {
         var programmers = createProgrammers(latch);
 
         var waiters = IntStream.range(0, waitersNum)
-                .mapToObj(i -> new Waiter(i, latch, soup, programmers))
+                .mapToObj(i -> new Waiter(i, latch, bell, soup))
                 .toList();
 
         for (var programmer : programmers) {
@@ -87,12 +90,12 @@ public class Lunch {
         for (int i = 0; i < programmersNum - 1; ++i) {
             var currentProgrammerSpoons = List.of(spoons.get(i), spoons.get(i + 1));
 
-            programmers.add(new Programmer(i, latch, currentProgrammerSpoons));
+            programmers.add(new Programmer(i, latch, bell, currentProgrammerSpoons));
         }
 
         var lastProgrammerSpoons = List.of(spoons.getFirst(), spoons.getLast());
 
-        programmers.add(new Programmer(programmersNum - 1, latch, lastProgrammerSpoons));
+        programmers.add(new Programmer(programmersNum - 1, latch, bell, lastProgrammerSpoons));
 
         return programmers;
     }

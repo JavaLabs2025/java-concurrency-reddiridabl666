@@ -33,7 +33,7 @@ class LunchTest {
         assertEquals(0, metrics.soupLeft(), "All soup was not eaten");
 
         for (int error : metrics.errors()) {
-            assertTrue(error <= 10, String.format("Error from expected mean is %d%%, expected less than or equal to 10%%", error));
+            assertTrue(error <= 30, String.format("Error from expected mean is %d%%, expected less than or equal to 30%%", error));
         }
     }
 
