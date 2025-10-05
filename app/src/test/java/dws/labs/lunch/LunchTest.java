@@ -1,0 +1,45 @@
+package dws.labs.lunch;
+
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.FieldSource;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+@ParameterizedClass(name = "Programmers: {0}, waiters: {1}, soup portions: {2}")
+@FieldSource(value = "args")
+class LunchTest {
+    @Parameter(0)
+    int programmersNum;
+
+    @Parameter(1)
+    int waitersNum;
+
+    @Parameter(2)
+    int soupPortions;
+
+    @RepeatedTest(value = 3)
+    void test() throws InterruptedException {
+        var lunch = new Lunch(programmersNum, waitersNum, soupPortions);
+        var metrics = lunch.run(5, TimeUnit.MINUTES);
+
+        assertTrue(metrics.timeoutExceeded(), "Timeout was exceeded");
+        assertEquals(0, metrics.soupLeft(), "All soup was not eaten");
+
+        for (int error : metrics.errors()) {
+            assertTrue(error <= 10, String.format("Error from expected mean is %d%%, expected less than or equal to 10%%", error));
+        }
+    }
+
+    static List<Arguments> args = Arrays.asList(
+            Arguments.of(7, 2, 100),
+            Arguments.of(7, 2, 1000),
+            Arguments.of(7, 2, 10_000),
+            Arguments.of(7, 2, 100_000));
+}
