@@ -61,6 +61,10 @@ public class Lunch {
         log.info("Soup left: {}", soup.getPortionsLeft());
 
         log.info("Programmers ate: {}", programmers.stream().map(programmer -> programmer.getAteSoupPortions()).toList());
+        log.info("Programmers ate total: {}", programmers.stream()
+                .map(programmer -> programmer.getAteSoupPortions())
+                .reduce((a, b) -> a + b)
+                .get());
 
         double mean = (double) totalPortions / programmersNum;
 

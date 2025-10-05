@@ -2,8 +2,6 @@ package dws.labs.lunch;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,7 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Programmer implements Runnable {
-    private static final Duration waitTime = Duration.of(10, ChronoUnit.MICROS);
+    private static final Duration waitAfterBiteTime = Duration.of(10, ChronoUnit.MICROS);
+    private static final int waitAfterAtePortionTimeMicros = 100;
 
     private static final int BOWL_SIZE = 100;
 
@@ -22,7 +21,6 @@ public class Programmer implements Runnable {
     private final CountDownLatch latch;
 
     private final List<Spoon> spoons;
-    private final List<Boolean> spoonsTaken;
 
     private final AtomicBoolean readyToEat = new AtomicBoolean(false);
     private final AtomicBoolean hasFood = new AtomicBoolean(false);
@@ -38,7 +36,6 @@ public class Programmer implements Runnable {
 
     public Programmer(int id, CountDownLatch latch, List<Spoon> spoons) {
         this.spoons = spoons;
-        this.spoonsTaken = new ArrayList<>(Collections.nCopies(spoons.size(), false));
         this.id = id;
         this.latch = latch;
     }
@@ -64,15 +61,13 @@ public class Programmer implements Runnable {
     public void run() {
         while (soupGone.compareAndSet(false, false)) {
             try {
-                boolean got = getSpoons();
-                if (got) {
-                    boolean soupLeft = getAndEatSoup();
-                    if (!soupLeft) {
-                        break;
-                    }
+                getSpoons();
+                boolean soupLeft = getAndEatSoup();
+                if (!soupLeft) {
+                    break;
                 }
 
-                Thread.sleep(waitTime);
+                Thread.sleep(Duration.of(100 + (long) (Math.random() * waitAfterAtePortionTimeMicros), ChronoUnit.MICROS));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
@@ -83,26 +78,21 @@ public class Programmer implements Runnable {
         latch.countDown();
     }
 
-    private boolean getSpoons() throws InterruptedException {
+    private void getSpoons() throws InterruptedException {
         for (int i = 0; i < spoons.size(); ++i) {
             log.info("[PROGRAMMER {}] Trying to get spoon {}", id, spoons.get(i).getId());
 
             spoons.get(i).take();
 
             log.info("[PROGRAMMER {}] Got spoon {}", id, spoons.get(i).getId());
-            spoonsTaken.set(i, true);
         }
-        return true;
     }
 
     private void leaveSpoons() {
         for (int i = 0; i < spoons.size(); ++i) {
-            if (spoonsTaken.get(i)) {
-                spoons.get(i).leave();
+            spoons.get(i).leave();
 
-                log.info("[PROGRAMMER {}] Left spoon {}", id, spoons.get(i).getId());
-                spoonsTaken.set(i, false);
-            }
+            log.info("[PROGRAMMER {}] Left spoon {}", id, spoons.get(i).getId());
         }
     }
 
@@ -117,7 +107,7 @@ public class Programmer implements Runnable {
 
             log.info("[PROGRAMMER {}] Ate {}% of soup in his bowl, left in bowl: {}%", id, amount, soupLeftInBowl);
 
-            Thread.sleep(waitTime);
+            Thread.sleep(waitAfterBiteTime);
         }
 
         ++ateSoupPortions;

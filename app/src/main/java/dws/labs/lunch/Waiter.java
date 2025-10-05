@@ -26,6 +26,7 @@ public class Waiter implements Runnable {
         this.programmers = programmers;
     }
 
+    @Override
     public void run() {
         try {
             while (soup.getPortionsLeft() > 0) {
@@ -57,7 +58,7 @@ public class Waiter implements Runnable {
                 Thread.sleep(waitTime);
             }
         } catch (InterruptedException e) {
-            return;
+            Thread.currentThread().interrupt();
         } finally {
             log.info("[WAITER {}] No soup left", id);
 

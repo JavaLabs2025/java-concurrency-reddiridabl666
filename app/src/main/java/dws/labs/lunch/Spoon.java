@@ -16,9 +16,8 @@ public class Spoon {
         this.id = id;
     }
 
-    boolean take() {
+    void take() {
         lock.lock();
-        return true;
     }
 
     void leave() {
